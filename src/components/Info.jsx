@@ -3,25 +3,17 @@ import Control from "./Control";
 import DisplayNodes from "./DisplayNodes";
 import Stats from "./Stats";
 import DetailedNode from "./DetailedNode";
-import OverallAnalysis from "./OverAllAnalysis";
-import Chart from "./Chart";
-import Chart2 from "./Chart2";
-const Info = () => {
+
+const Info = ({isSidebarOpen, toggleSidebar}) => {
   const [selectedType, setSelectedType] = useState("All");
   const [selectedActivity, setSelectedActivity] = useState("All");
   const [loading, setLoading] = useState(true);
-  const [viewChart, setViewChart] = useState(false);
   const [longData, setLongData] = useState({
     tank: {},
     borewell: {},
     water: {},
   });
 
-  const [gradient, setGradient] = useState("greenRed");
-
-  const handleGradientChange = (e) => {
-    setGradient(e.target.value);
-  };
   const [selectedNode, setSelectedNode] = useState(null);
 
   return (
@@ -33,28 +25,14 @@ const Info = () => {
             setSelectedType={setSelectedType}
             selectedActivity={selectedActivity}
             setSelectedActivity={setSelectedActivity}
+            longData = {longData}
+            setLongData = {setLongData}
+            isSidebarOpen={isSidebarOpen}
+            toggleSidebar={toggleSidebar}
           />
         </div>
         <div>
           <div className="nodes mt-5 h-[80vh] overflow-scroll overflow-x-hidden pb-1">
-            <div className="ml-4 mb-2">
-              {viewChart && !loading ? (
-                <div className="flex flex-col items-center">
-                  <div className="flex flex-col items-center bg-perf p-5 w-[80%] rounded-lg">
-                    <div className="flex justify-between w-[80%]">
-                      <h1>Node Performance Index</h1>
-                      <button onClick={() => setViewChart(false)}>Close</button>
-                    </div>
-                    <Chart data={longData} gradientType={gradient} />
-                    <OverallAnalysis uptimeData={longData} />
-                  </div>
-                </div>
-              ) : (
-                <button className="performtext" onClick={() => setViewChart(true)}>
-                  View Performance
-                </button>
-              )}
-            </div>
             <div className="ml-4">{!loading && <Stats />}</div>
             <DisplayNodes
               selectedType={selectedType}

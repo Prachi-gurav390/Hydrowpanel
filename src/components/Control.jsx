@@ -104,12 +104,15 @@ import { React, useState } from "react";
 import Dropdown from "./Dropdown";
 import ProfileCard from "./ProfileCard";
 import ThemeToggle from "./ThemeToggle";
+import Perform from "./Perform";
 
 const Control = ({
   selectedType,
   setSelectedType,
   selectedActivity,
   setSelectedActivity,
+  longData,
+  setLongData,
 }) => {
   const activity = ["All", "Active", "Inactive"];
   const types = ["All", "Borewell", "Water Meter", "Water Tank"];
@@ -130,24 +133,24 @@ const Control = ({
   };
 
   return (
-    <div className=" flex navbar justify-between h-full w-[98%] items-center z-20">
-      <div className="flex gap-6 justify-between">
-        <Dropdown
-          label="Activity"
-          options={activity}
-          selectedOption={selectedActivity}
-          onChange={setSelectedActivity}
-        />
-        <Dropdown
-          label="Type"
-          options={types}
-          selectedOption={selectedType}
-          onChange={setSelectedType}
-        />
-      </div>
-      <div className="flex gap-4 justify-between">
-        <button onClick={handleButtonClick2} className="controlbtn1">
-          <div>
+    <div className="h-full max-h-min relative w-[98%] ">
+      <div className="flex navbar justify-between h-full w-[98%] items-center">
+        <div className="flex gap-6 justify-between">
+          <Dropdown
+            label="Activity"
+            options={activity}
+            selectedOption={selectedActivity}
+            onChange={setSelectedActivity}
+          />
+          <Dropdown
+            label="Type"
+            options={types}
+            selectedOption={selectedType}
+            onChange={setSelectedType}
+          />
+        </div>
+        <div className="flex gap-4 justify-between">
+          <button onClick={handleButtonClick2} className="controlbtn1">
             <svg
               height="30px"
               width="30px"
@@ -156,12 +159,48 @@ const Control = ({
               fill="#000000"
             >
               <g>
-                <circle cx="256" cy="256" r="256" fill="#EDEDED" />
+                <circle
+                  cx="256"
+                  cy="256"
+                  r="256"
+                  fill="var(--circle-color-1)"
+                />
+                <circle
+                  cx="256"
+                  cy="256"
+                  r="200.348"
+                  fill="var(--circle-color-2)"
+                />
+                <circle
+                  cx="256"
+                  cy="256"
+                  r="144.696"
+                  fill="var(--circle-color-3)"
+                />
+                <circle
+                  cx="256"
+                  cy="256"
+                  r="61.96"
+                  fill="var(--circle-color-4)"
+                />
+                <circle
+                  cx="256"
+                  cy="256"
+                  r="89.043"
+                  fill="var(--circle-color-5)"
+                />
+                <circle
+                  cx="256"
+                  cy="256"
+                  r="33.391"
+                  fill="var(--circle-color-6)"
+                />
+                {/* <circle cx="256" cy="256" r="256" fill="#EDEDED" />
                 <circle cx="256" cy="256" r="200.348" fill="#C6C6C6" />
                 <circle cx="256" cy="256" r="144.696" fill="#969696" />
                 <circle cx="256" cy="256" r="61.96" fill="#EDEDED" />
                 <circle cx="256" cy="256" r="89.043" fill="#73A4BC" />
-                <circle cx="256" cy="256" r="33.391" fill="#EDEDED" />
+                <circle cx="256" cy="256" r="33.391" fill="#EDEDED" /> */}
                 <path
                   d="M338.956 288.351c-12.948 33.177-45.195 56.693-82.956 56.693s-70.008-23.516-82.956-56.693h164.912z"
                   fill="#98C7E5"
@@ -188,11 +227,17 @@ const Control = ({
                 />
               </g>
             </svg>
-          </div>
-        </button>
-        <ThemeToggle />
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
-      {/* {showContainer2 && <ThemeToggle onClose={handleCloseButtonClick2} />} */}
+      {showContainer2 && (
+        <Perform
+          onClose={handleCloseButtonClick2}
+          longData={longData}
+          setLongData={setLongData}
+        />
+      )}
     </div>
   );
 };

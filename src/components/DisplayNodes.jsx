@@ -122,7 +122,7 @@
 //         const processData = (data) => {
 //           const startTime = new Date(); // Start time will be set to midnight of the previous day
 //           startTime.setHours(0, 0, 0, 0);
-          
+
 //           const now = new Date(); // Current time
 //           const currentPeriodIndex = Math.floor((now - startTime) / (1000 * 60 * 30)); // Calculate current period index
 
@@ -298,7 +298,6 @@
 // };
 
 // export default DisplayNodes;
-
 
 import React, { useState, useEffect } from "react";
 import DetailedNode from "./DetailedNode";
@@ -477,7 +476,7 @@ const DisplayNodes = ({
         };
 
         setLongData(newData);
-        setMerger(true);
+        // setMerger(true);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -601,7 +600,9 @@ const DisplayNodes = ({
         {(selectedType === "All" || selectedType === "Water Tank") && (
           <>
             <h1 className="typeheading">Water Tank</h1>
-            <div className="grid mt-3 mb-2">{filterCards(data.tank, "tank")}</div>
+            <div className="grid mt-3 mb-2">
+              {filterCards(data.tank, "tank")}
+            </div>
           </>
         )}
         {(selectedType === "All" || selectedType === "Borewell") && (
@@ -615,7 +616,9 @@ const DisplayNodes = ({
         {(selectedType === "All" || selectedType === "Water Meter") && (
           <>
             <h1 className="typeheading">Water Meter</h1>
-            <div className="grid mt-3 mb-2">{filterCards(data.water, "water")}</div>
+            <div className="grid mt-3 mb-2">
+              {filterCards(data.water, "water")}
+            </div>
           </>
         )}
       </div>

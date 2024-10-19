@@ -1,3 +1,5 @@
+
+
 // import React, { useState, useEffect } from "react";
 
 // const DetailedNode = ({ node, goBack, data }) => {
@@ -9,8 +11,6 @@
 //   const currentMinutes = now.getMinutes();
 //   const currentPeriodIndex = currentHour * 2 + Math.floor(currentMinutes / 30);
 
-//   console.log(data);
-  
 //   const fetchGeminiData = async () => {
 //     try {
 //       // Format the recorded values into a readable sentence
@@ -235,7 +235,7 @@
 //         </div>
 
 //         {/* Summary Section */}
-//         <div className="flex ml-3 mr-3 pb-6 pt-6 justify-between gap-4">
+//         <div className="flex ml-3 mr-3 pb-6 pt-6 justify-between gap-4 bg-transparent">
 //           <div className="performance-container px-4 items-center justify-center">
 //             <div className="flex justify-center flex-col">
 //               <div
@@ -248,21 +248,12 @@
 //                 {Array.from({ length: 6 }).map((_, rowIndex) => {
 //                   const timeIndex = rowIndex * 8; // Calculate the index for the time column
 
-//                   // Check if the current rowIndex corresponds to a period that has data
-//                   const shouldRenderRow =
-//                     timeIndex < data[type][itemName].length;
-
-//                   if (!shouldRenderRow) {
-//                     return null; // Skip rendering this row if there is no data
-//                   }
-
 //                   return (
 //                     <React.Fragment key={rowIndex}>
 //                       {/* Time Column */}
-//                       <div
+//                       <div className="starttime"
 //                         style={{
 //                           textAlign: "left",
-//                           color: "rgb(52, 71, 103)",
 //                           paddingRight: "2px", // Add padding to align the time properly
 //                           fontSize: "12px",
 //                         }}
@@ -273,31 +264,22 @@
 //                       {/* Grid of Tiles */}
 //                       {data[type][itemName]
 //                         .slice(timeIndex, timeIndex + 8)
-//                         .map((active, index) => {
-//                           const adjustedIndex = timeIndex + index;
-//                           const isNeutral =
-//                             adjustedIndex >= data[type][itemName].length;
-
-//                           return (
-//                             <Tile
-//                               key={adjustedIndex}
-//                               index={adjustedIndex} // Pass the index to calculate the start time
-//                               active={!isNeutral && active} // Use the value if within range
-//                               neutral={
-//                                 isNeutral || adjustedIndex > currentPeriodIndex
-//                               } // Updated neutral condition
-//                             />
-//                           );
-//                         })}
+//                         .map((active, index) => (
+//                           <Tile
+//                             key={timeIndex + index}
+//                             index={timeIndex + index} // Pass the index to calculate the start time
+//                             active={active}
+//                             neutral={timeIndex + index > currentPeriodIndex} // Updated neutral condition
+//                           />
+//                         ))}
 //                     </React.Fragment>
 //                   );
 //                 })}
 //               </div>
 //             </div>
 
-//             <h2
+//             <h2 className="performance"
 //               style={{
-//                 color: "rgb(52, 71, 103)",
 //                 fontSize: "19px",
 //                 fontWeight: "700",
 //               }}
@@ -374,7 +356,7 @@
 //             </div>
 
 //             <div className="flex items-center gap-2">
-//               <p> {geminiResponse || "Fetching Gemini data..."}</p>
+//               <p className="summary"> {geminiResponse || "Fetching Gemini data..."}</p>
 //               <div className="summary-section"></div>
 //             </div>
 //           </div>
@@ -387,10 +369,15 @@
 // export default DetailedNode;
 
 
+
+
+
+
+
 import React, { useState, useEffect } from "react";
 
 const DetailedNode = ({ node, goBack, data }) => {
-  const [geminiResponse, setGeminiResponse] = useState("");
+  const [geminiResponse, setGeminiResponse] = useState("Fetching Gemini data...");
   const { itemName, itemAttributes, type } = node;
   const createdAt = itemAttributes.created_at;
   const now = new Date();
@@ -398,7 +385,46 @@ const DetailedNode = ({ node, goBack, data }) => {
   const currentMinutes = now.getMinutes();
   const currentPeriodIndex = currentHour * 2 + Math.floor(currentMinutes / 30);
 
+  const generateSummary = () => {
+    if (!data || !data[type] || !data[type][itemName]) {
+      return null; // Data is not yet available
+    }
+
+    const activePeriods = data[type][itemName];
+    const activeCount = activePeriods.filter((active) => active).length;
+    const totalPeriods = activePeriods.length;
+    const activePercentage = (activeCount / totalPeriods) * 100;
+    const lastUpdatedValue = itemAttributes ? itemAttributes.value : "N/A";
+    let streakCount = 0;
+    let maxStreak = 0;
+
+    activePeriods.forEach((active) => {
+      if (active) {
+        streakCount++;
+        if (streakCount > maxStreak) {
+          maxStreak = streakCount;
+        }
+      } else {
+        streakCount = 0;
+      }
+    });
+
+    return {
+      activeCount,
+      activePercentage,
+      lastUpdatedValue,
+      maxStreak,
+      lastUpdatedTime: createdAt,
+    };
+  };
+
+  const summary = generateSummary();
+
   const fetchGeminiData = async () => {
+    if (!summary) {
+      return;
+    }
+
     try {
       // Format the recorded values into a readable sentence
       const recordedValues = itemAttributes
@@ -444,9 +470,9 @@ const DetailedNode = ({ node, goBack, data }) => {
               if (isLastItem) {
                 return first
                   ? `${displayKey} is ${displayValue} ${unitLabel}.`
-                  : `and ${displayKey} is ${displayValue} ${unitLabel}. `;
+                  : `and ${displayKey} is ${displayValue} ${unitLabel}.`;
               } else if (isSecondLastItem) {
-                return `${displayKey} is ${displayValue} ${unitLabel} `;
+                return `${displayKey} is ${displayValue} ${unitLabel}`;
               } else {
                 return `${displayKey} is ${displayValue} ${unitLabel}, `;
               }
@@ -454,14 +480,19 @@ const DetailedNode = ({ node, goBack, data }) => {
             .join("")
         : "N/A";
 
-      // Insert actual values into the prompt
+      const {
+        activePercentage = 0,
+        maxStreak = 0,
+        lastUpdatedTime = "N/A",
+      } = summary;
+
       const prompt = `I want to generate a summary of the performance of a node. 
-      Performance matrix for a node consists of:
-      1) Activity rate: ${activePercentage.toFixed(2)}%
-      2) Maximum continuous activity: ${(maxStreak / 2).toFixed(1)} hours
-      3) Last updated time: ${lastUpdatedTime}
-      4) Recorded values: ${recordedValues}.
-      Please consider first 2 factors and then decide how the performance is. If the Activity rate is from 90% to 100% then the performance is excellent, if the Activity rate is between 70%-90% then it is good, if the activity rate is from 40% to 70% and the Maximum continuous activity is >= 5 hours then the performance is good if <5 hours then it is low, if the Activity rate is from 1% to 40% then it is performing very poor, if the Activity rate is 0% then write that the node stopped wokring. For example, if after processing 1 prompt response provided by you is- "Based on the provided information, the node's performance can be summarized as follows: *Activity Rate:* 60.42% *Maximum Continuous Activity:* 14.5 hours *Performance:* *Good* *Explanation:* The Activity rate of 60.42% falls within the range of 40% to 70%. Since the Maximum continuous activity is 14.5 hours, which is greater than 5 hours, the performance is considered *good. **Additional Information:* - *Last updated time:* 14-09-2024 14:35:38 - *Recorded values:* Water Level is 2 cm, Temperature is 31 °C and Volume is 2.3 kL." then I want that the displayed response should be in this format-"Activity Rate of the node is 60.42% with a Maximum Continuous Activity of 4.5 hours. As of the last update on 14-09-2024 14:35:38, the recorded Water Level is 2 cm, Temperature is 31 °C and Volume is 2.3 kL. Considering the node's activity,  performance of the node is good." Make sure that the response is in the provided format only. And the reponse should be grammatically and logically correct. Dont write anything in bold format.`;
+Performance metrics for a node consist of:
+1) Activity rate: ${activePercentage.toFixed(2)}%
+2) Maximum continuous activity: ${(maxStreak / 2).toFixed(1)} hours
+3) Last updated time: ${lastUpdatedTime}
+4) Recorded values: ${recordedValues}.
+Please consider the first two factors and then decide how the performance is. If the Activity rate is from 90% to 100% then the performance is excellent, if the Activity rate is between 70%-90% then it is good, if the activity rate is from 40% to 70% and the Maximum continuous activity is >= 5 hours then the performance is good, if <5 hours then it is low, if the Activity rate is from 1% to 40% then it is performing very poor, if the Activity rate is 0% then write that the node stopped working. I want the response in this format: "Activity Rate of the node is X% with a Maximum Continuous Activity of Y hours. As of the last update on Z, the recorded values are... Considering the node's activity, performance of the node is [performance level]." Make sure that the response is grammatically and logically correct. Don't write anything in bold format.`;
 
       const response = await fetch("http://localhost:3001/gemini", {
         method: "POST",
@@ -475,23 +506,63 @@ const DetailedNode = ({ node, goBack, data }) => {
       setGeminiResponse(result.generatedText);
     } catch (error) {
       console.error("Error fetching Gemini data", error);
+      setGeminiResponse("Error fetching Gemini data.");
     }
   };
 
-  // Only call fetchGeminiData when the component is first opened
   useEffect(() => {
-    fetchGeminiData();
-  }, []); // Empty dependency array ensures this runs only once on mount
+    if (summary) {
+      fetchGeminiData();
+    }
+  }, [summary]);
 
-  // Tile Component with Hover Tooltip
+  if (!summary) {
+    return (
+      <div className="absolute z-20 flex max-w-[70%] justify-center detailednode mr-1">
+        <div className="detailedbox">
+          <div className="detailedheading">
+            <div className="detailedname">
+              <div>{itemName}</div>
+              <button className="close-button" onClick={goBack}>
+                <svg
+                  className="close-icon"
+                  width="20px"
+                  height="20px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  stroke="#ffffff"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M19.207 6.207a1 1 0 0 0-1.414-1.414L12 10.586 6.207 4.793a1 1 0 0 0-1.414 1.414L10.586 12l-5.793 5.793a1 1 0 1 0 1.414 1.414L12 13.414l5.793 5.793a1 1 0 0 0 1.414-1.414L13.414 12l5.793-5.793z"
+                    fill="#FFFFFF"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="flex ml-3 mr-3 pb-6 pt-6 justify-center bg-transparent">
+            <p>No data available at this moment.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    activeCount,
+    activePercentage,
+    lastUpdatedValue,
+    maxStreak,
+    lastUpdatedTime,
+  } = summary;
+
   const Tile = ({ active, neutral, index }) => {
     const [hovered, setHovered] = useState(false);
-
-    // Calculate the start time of the period
     const hours = Math.floor(index / 2);
     const minutes = (index % 2) * 30;
-
-    // Format the time as HH:MM
     const startTime = `${String(hours).padStart(2, "0")}:${String(
       minutes
     ).padStart(2, "0")}`;
@@ -517,12 +588,11 @@ const DetailedNode = ({ node, goBack, data }) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Tooltip */}
         {hovered && (
           <div
             style={{
               position: "absolute",
-              bottom: "100%", // Position above the tile
+              bottom: "100%",
               left: "50%",
               transform: "translateX(-50%)",
               backgroundColor: "rgba(0, 0, 0, 0.75)",
@@ -531,7 +601,7 @@ const DetailedNode = ({ node, goBack, data }) => {
               borderRadius: "4px",
               fontSize: "12px",
               whiteSpace: "nowrap",
-              pointerEvents: "none", // Prevent blocking interaction
+              pointerEvents: "none",
               zIndex: 20,
             }}
           >
@@ -542,57 +612,11 @@ const DetailedNode = ({ node, goBack, data }) => {
     );
   };
 
-  // Array to store the start time of each period
   const periods = Array.from({ length: 48 }, (_, index) => {
     const hours = Math.floor(index / 2);
     const minutes = (index % 2) * 30;
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}`;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
   });
-
-  // Generate summary based on data
-  const generateSummary = () => {
-    const activePeriods = data[type][itemName];
-    const activeCount = activePeriods.filter((active) => active).length;
-    const totalPeriods = activePeriods.length;
-    const activePercentage = (activeCount / totalPeriods) * 100;
-
-    // Find the last updated value
-    const lastUpdatedValue = itemAttributes ? itemAttributes.value : "N/A";
-
-    // Analyze pattern (example: streak of active periods)
-    let streakCount = 0;
-    let maxStreak = 0;
-
-    activePeriods.forEach((active) => {
-      if (active) {
-        streakCount++;
-        if (streakCount > maxStreak) {
-          maxStreak = streakCount;
-        }
-      } else {
-        streakCount = 0;
-      }
-    });
-
-    return {
-      activeCount,
-      activePercentage,
-      lastUpdatedValue,
-      maxStreak,
-      lastUpdatedTime: createdAt,
-    };
-  };
-
-  const {
-    activeCount,
-    activePercentage,
-    lastUpdatedValue,
-    maxStreak,
-    lastUpdatedTime,
-  } = generateSummary();
 
   return (
     <div className="absolute z-20 flex max-w-[70%] justify-center detailednode mr-1">
@@ -620,43 +644,39 @@ const DetailedNode = ({ node, goBack, data }) => {
             </button>
           </div>
         </div>
-
-        {/* Summary Section */}
         <div className="flex ml-3 mr-3 pb-6 pt-6 justify-between gap-4 bg-transparent">
           <div className="performance-container px-4 items-center justify-center">
             <div className="flex justify-center flex-col">
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(9, 1fr)", // 8 columns for 48 periods + 1 column for time
+                  gridTemplateColumns: "repeat(9, 1fr)",
                   gap: "3px",
                 }}
               >
                 {Array.from({ length: 6 }).map((_, rowIndex) => {
-                  const timeIndex = rowIndex * 8; // Calculate the index for the time column
+                  const timeIndex = rowIndex * 8;
 
                   return (
                     <React.Fragment key={rowIndex}>
-                      {/* Time Column */}
-                      <div className="starttime"
+                      <div
+                        className="starttime"
                         style={{
                           textAlign: "left",
-                          paddingRight: "2px", // Add padding to align the time properly
+                          paddingRight: "2px",
                           fontSize: "12px",
                         }}
                       >
-                        {periods[timeIndex]} {/* Display the start time */}
+                        {periods[timeIndex]}
                       </div>
-
-                      {/* Grid of Tiles */}
                       {data[type][itemName]
                         .slice(timeIndex, timeIndex + 8)
                         .map((active, index) => (
                           <Tile
                             key={timeIndex + index}
-                            index={timeIndex + index} // Pass the index to calculate the start time
+                            index={timeIndex + index}
                             active={active}
-                            neutral={timeIndex + index > currentPeriodIndex} // Updated neutral condition
+                            neutral={timeIndex + index > currentPeriodIndex}
                           />
                         ))}
                     </React.Fragment>
@@ -665,7 +685,8 @@ const DetailedNode = ({ node, goBack, data }) => {
               </div>
             </div>
 
-            <h2 className="performance"
+            <h2
+              className="performance"
               style={{
                 fontSize: "19px",
                 fontWeight: "700",
@@ -692,7 +713,6 @@ const DetailedNode = ({ node, goBack, data }) => {
                       key !== "pressurevoltage" &&
                       key !== "Last_Updated"
                     ) {
-                      // Key mappings for labels
                       const keyLabelMapping = {
                         water_level: "Water Level",
                         totalflow: "Total Flow",
@@ -701,8 +721,6 @@ const DetailedNode = ({ node, goBack, data }) => {
                         flowrate: "Flow Rate",
                         pressure: "Pressure",
                       };
-
-                      // Units mapping
                       const unitMapping = {
                         water_level: "cm",
                         totalflow: "Litres",
@@ -743,7 +761,9 @@ const DetailedNode = ({ node, goBack, data }) => {
             </div>
 
             <div className="flex items-center gap-2">
-              <p className="summary"> {geminiResponse || "Fetching Gemini data..."}</p>
+              <p className="summary">
+                {geminiResponse || "Fetching Gemini data..."}
+              </p>
               <div className="summary-section"></div>
             </div>
           </div>

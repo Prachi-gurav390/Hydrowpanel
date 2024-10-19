@@ -138,7 +138,7 @@ const OverallAnalysis = ({ uptimeData }) => {
   }, [prompt, debouncedFetchAnalysis, uptimeArray.length]); // Dependencies are prompt and debouncedFetchAnalysis
 
   return (
-    <div className="overall-analysis">
+    <div className="overall-analysis summary">
       {loading && <p>Loading analysis...</p>}
       {error && <p className="error">{error}</p>}
       {!loading && !error && analysis && <p>{analysis}</p>}
